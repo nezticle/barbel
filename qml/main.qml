@@ -25,6 +25,7 @@ import QtQuick.Window 2.2
 import com.bsquask.Barbel 1.0
 
 Window {
+    id: window
     visible: true
     width: 1280
     height: 720
@@ -37,14 +38,8 @@ Window {
         scene: barbelScene
     }
 
-    Text {
-        text: qsTr("I have more barbels than a catfish.")
-        anchors.centerIn: parent
-        color: "white"
-        font.pointSize: 16
-    }
-
     BarbelScene {
         id: barbelScene
+        viewportSize: Qt.size(viewport.width, viewport.height)
     }
 }

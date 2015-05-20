@@ -23,12 +23,14 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include <QObject>
+#include <QtCore/QObject>
+#include <QtCore/QSize>
 
 namespace Qt3D {
     class QEntity;
     class QFrameGraph;
     class QForwardRenderer;
+    class QCamera;
 }
 
 namespace Barbel {
@@ -36,11 +38,23 @@ namespace Barbel {
 class Scene : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QSize viewportSize READ viewportSize WRITE setViewportSize NOTIFY viewportSizeChanged)
+    Q_PROPERTY(Qt3D::QCamera* activeCamera READ activeCamera WRITE setActiveCamera NOTIFY activeCameraChanged)
 public:
     explicit Scene(QObject *parent = 0);
     ~Scene();
 
     Qt3D::QEntity *rootEnity();
+    QSize viewportSize() const;
+    Qt3D::QCamera *activeCamera() const;
+
+public slots:
+    void setViewportSize(QSize viewportSize);
+    void setActiveCamera(Qt3D::QCamera *activeCamera);
+
+signals:
+    void viewportSizeChanged(QSize viewportSize);
+    void activeCameraChanged(Qt3D::QCamera *activeCamera);
 
 private:
     void initScene();
@@ -48,6 +62,10 @@ private:
     Qt3D::QEntity *m_rootEntity;
     Qt3D::QFrameGraph *m_frameGraph;
     Qt3D::QForwardRenderer *m_forwardRenderer;
+    Qt3D::QCamera *m_activeCamera;
+
+    float m_cameraAspectRatio;
+    QSize m_viewportSize;
 };
 
 }

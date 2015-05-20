@@ -4,7 +4,10 @@ QT += qml quick gamepad 3dcore 3drenderer
 
 SOURCES += src/main.cpp \
     src/scene.cpp \
-    src/sceneviewitem.cpp
+    src/sceneviewitem.cpp \
+    src/object.cpp \
+    src/player.cpp \
+    src/testcube.cpp
 
 RESOURCES += qml/qml.qrc
 
@@ -16,4 +19,7 @@ include(deployment.pri)
 
 HEADERS += \
     src/scene.h \
-    src/sceneviewitem.h
+    src/sceneviewitem.h \
+    src/object.h \
+    src/player.h \
+    src/testcube.h
