@@ -20,31 +20,51 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-import QtQuick 2.5
-import QtQuick.Window 2.2
-import com.bsquask.Barbel 1.0
+#ifndef SCENEVIEWITEM_H
+#define SCENEVIEWITEM_H
 
-Window {
-    visible: true
-    width: 1280
-    height: 720
-    title: "Barbel"
-    color: "blue"
+#include <QtQuick/QQuickFramebufferObject>
 
-    BarbelSceneViewItem {
-        id: viewport
-        anchors.fill: parent
-        scene: barbelScene
-    }
-
-    Text {
-        text: qsTr("I have more barbels than a catfish.")
-        anchors.centerIn: parent
-        color: "white"
-        font.pointSize: 16
-    }
-
-    BarbelScene {
-        id: barbelScene
-    }
+namespace Qt3D {
+    class QAspectEngine;
+    class QEntity;
+    class QRenderAspect;
 }
+
+namespace Barbel {
+
+class Scene;
+
+class SceneViewItem : public QQuickFramebufferObject
+{
+    Q_OBJECT
+    Q_PROPERTY(Barbel::Scene* scene READ scene WRITE setScene NOTIFY sceneChanged)
+public:
+    SceneViewItem(QQuickItem *parent = 0);
+    ~SceneViewItem();
+
+    Barbel::Scene *scene() const;
+
+public slots:
+    void setScene(Barbel::Scene* scene);
+
+private slots:
+    void applyRootEntityChange();
+
+signals:
+    void sceneChanged(Barbel::Scene* scene);
+
+protected:
+    Renderer *createRenderer() const Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *nodeData) Q_DECL_OVERRIDE;
+
+private:
+    Barbel::Scene *m_scene;
+
+    Qt3D::QAspectEngine *m_aspectEngine;
+    Qt3D::QRenderAspect *m_renderAspect;
+};
+
+}
+
+#endif // SCENEVIEWITEM_H

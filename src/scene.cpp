@@ -20,31 +20,42 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-import QtQuick 2.5
-import QtQuick.Window 2.2
-import com.bsquask.Barbel 1.0
+#include "scene.h"
 
-Window {
-    visible: true
-    width: 1280
-    height: 720
-    title: "Barbel"
-    color: "blue"
+#include <Qt3DCore/qentity.h>
 
-    BarbelSceneViewItem {
-        id: viewport
-        anchors.fill: parent
-        scene: barbelScene
-    }
+#include <Qt3DRenderer/qframegraph.h>
+#include <Qt3DRenderer/qforwardrenderer.h>
 
-    Text {
-        text: qsTr("I have more barbels than a catfish.")
-        anchors.centerIn: parent
-        color: "white"
-        font.pointSize: 16
-    }
-
-    BarbelScene {
-        id: barbelScene
-    }
+Barbel::Scene::Scene(QObject *parent)
+    : QObject(parent)
+    , m_rootEntity(new Qt3D::QEntity())
+    , m_frameGraph(Q_NULLPTR)
+    , m_forwardRenderer(Q_NULLPTR)
+{
+    initScene();
 }
+
+Barbel::Scene::~Scene()
+{
+    m_rootEntity->deleteLater();
+}
+
+Qt3D::QEntity *Barbel::Scene::rootEnity()
+{
+    return m_rootEntity;
+}
+
+void Barbel::Scene::initScene()
+{
+    //Setup Framegraph
+    if (m_frameGraph == Q_NULLPTR)
+        m_frameGraph = new Qt3D::QFrameGraph();
+    if (m_forwardRenderer == Q_NULLPTR)
+        m_forwardRenderer = new Qt3D::QForwardRenderer();
+
+    m_forwardRenderer->setClearColor(Qt::black);
+    m_frameGraph->setActiveFrameGraph(m_forwardRenderer);
+    m_rootEntity->addComponent(m_frameGraph);
+}
+

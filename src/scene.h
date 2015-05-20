@@ -20,31 +20,36 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-import QtQuick 2.5
-import QtQuick.Window 2.2
-import com.bsquask.Barbel 1.0
+#ifndef SCENE_H
+#define SCENE_H
 
-Window {
-    visible: true
-    width: 1280
-    height: 720
-    title: "Barbel"
-    color: "blue"
+#include <QObject>
 
-    BarbelSceneViewItem {
-        id: viewport
-        anchors.fill: parent
-        scene: barbelScene
-    }
-
-    Text {
-        text: qsTr("I have more barbels than a catfish.")
-        anchors.centerIn: parent
-        color: "white"
-        font.pointSize: 16
-    }
-
-    BarbelScene {
-        id: barbelScene
-    }
+namespace Qt3D {
+    class QEntity;
+    class QFrameGraph;
+    class QForwardRenderer;
 }
+
+namespace Barbel {
+
+class Scene : public QObject
+{
+    Q_OBJECT
+public:
+    explicit Scene(QObject *parent = 0);
+    ~Scene();
+
+    Qt3D::QEntity *rootEnity();
+
+private:
+    void initScene();
+
+    Qt3D::QEntity *m_rootEntity;
+    Qt3D::QFrameGraph *m_frameGraph;
+    Qt3D::QForwardRenderer *m_forwardRenderer;
+};
+
+}
+
+#endif // SCENE_H

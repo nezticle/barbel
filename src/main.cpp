@@ -23,9 +23,17 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
+#include <QtQuick>
+
+#include "scene.h"
+#include "sceneviewitem.h"
+
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+
+    qmlRegisterType<Barbel::Scene>("com.bsquask.Barbel", 1, 0, "BarbelScene");
+    qmlRegisterType<Barbel::SceneViewItem>("com.bsquask.Barbel", 1, 0, "BarbelSceneViewItem");
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
