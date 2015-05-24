@@ -32,7 +32,12 @@
 #include "player.h"
 #include "testcube.h"
 
-//Debuggin
+//Networking
+#include "Barbel/clientmanager.h"
+#include "Barbel/servermanager.h"
+#include <QtNetwork/QHostInfo>
+
+//Debugging
 #include <Qt3DCore/QTransform>
 #include <Qt3DCore/QTranslateTransform>
 #include <Qt3DRenderer/QCylinderMesh>
@@ -47,9 +52,15 @@ Barbel::Scene::Scene(QObject *parent)
     , m_frameGraph(Q_NULLPTR)
     , m_forwardRenderer(Q_NULLPTR)
     , m_activeCamera(Q_NULLPTR)
+    , m_player(Q_NULLPTR)
     , m_cameraAspectRatio(3.0 / 4.0)
+    , m_serverManager(Q_NULLPTR)
+    , m_clientManager(Q_NULLPTR)
+    , m_connectionState(Scene::InitializedState)
+
 {
     initScene();
+    //initTestData();
 }
 
 Barbel::Scene::~Scene()
@@ -70,6 +81,16 @@ QSize Barbel::Scene::viewportSize() const
 Qt3D::QCamera* Barbel::Scene::activeCamera() const
 {
     return m_activeCamera;
+}
+
+Barbel::Scene::ConnectionState Barbel::Scene::connectionState() const
+{
+    return m_connectionState;
+}
+
+QString Barbel::Scene::errorString() const
+{
+    return m_errorString;
 }
 
 void Barbel::Scene::setViewportSize(QSize viewportSize)
@@ -98,6 +119,76 @@ void Barbel::Scene::setActiveCamera(Qt3D::QCamera *activeCamera)
     emit activeCameraChanged(activeCamera);
 }
 
+void Barbel::Scene::startSinglePlayerSession()
+{
+    //Start both the client and server locally only
+    if (m_serverManager != Q_NULLPTR)
+        delete m_serverManager;
+    if (m_clientManager != Q_NULLPTR)
+        delete m_clientManager;
+
+    m_serverManager = new Barbel::ServerManager(this);
+    if (m_serverManager->listen(QHostAddress::LocalHost)) {
+        quint16 localPort = m_serverManager->serverPort();
+        m_clientManager = new Barbel::ClientManager(this);
+        m_clientManager->connectToHost(QHostAddress::LocalHost, localPort);
+        m_connectionState = Scene::ConnectingState;
+        emit connectionStateChanged(m_connectionState);
+    } else {
+        //Could not create a server
+        qDebug() << "Something is busted, couldn't start a local-player session";
+        m_connectionState = Scene::ErrorState;
+        emit connectionStateChanged(m_connectionState);
+    }
+}
+
+void Barbel::Scene::hostMultiPlayerSession(quint16 port)
+{
+    //Start both the client and server (Open)
+    if (m_serverManager != Q_NULLPTR)
+        delete m_serverManager;
+    if (m_clientManager != Q_NULLPTR)
+        delete m_clientManager;
+
+    m_serverManager = new Barbel::ServerManager(this);
+    if (m_serverManager->listen(QHostAddress::Any, port)) {
+        quint16 localPort = m_serverManager->serverPort();
+        m_clientManager = new Barbel::ClientManager(this);
+        m_clientManager->connectToHost(QHostAddress::LocalHost, localPort);
+        m_connectionState = Scene::ConnectingState;
+        emit connectionStateChanged(m_connectionState);
+    } else {
+        //Could not create a server
+        qDebug() << "Something is busted, couldn't start a local-player session";
+        m_connectionState = Scene::ErrorState;
+        emit connectionStateChanged(m_connectionState);
+    }
+}
+
+void Barbel::Scene::joinMultiPlayerSession(const QString &address, quint16 port)
+{
+    if (m_serverManager != Q_NULLPTR)
+        delete m_serverManager;
+    if (m_clientManager != Q_NULLPTR)
+        delete m_clientManager;
+
+    QHostInfo hostInfo = QHostInfo::fromName(address);
+
+    if ( hostInfo.error() != QHostInfo::NoError) {
+        m_connectionState = Scene::ErrorState;
+        m_errorString = hostInfo.errorString();
+        emit errorStringChanged(m_errorString);
+        emit connectionStateChanged(m_connectionState);
+        return;
+    }
+
+    //Start only the client manager
+    m_clientManager = new Barbel::ClientManager(this);
+    m_clientManager->connectToHost(hostInfo.addresses().first(), port);
+    m_connectionState = Scene::ConnectingState;
+    emit connectionStateChanged(m_connectionState);
+}
+
 void Barbel::Scene::initScene()
 {
     //Setup Framegraph
@@ -111,12 +202,14 @@ void Barbel::Scene::initScene()
     m_rootEntity->addComponent(m_frameGraph);
 
     //Test Objects
-    Barbel::Player *player = new Barbel::Player(m_rootEntity);
-    player->setTranslation(QVector3D(0.0f, 0.0f, 0.0f));
-    setActiveCamera(player->camera());
+    m_player = new Barbel::Player(m_rootEntity);
+    m_player->setTranslation(QVector3D(0.0f, 0.0f, 0.0f));
+    setActiveCamera(m_player->camera());
     activeCamera()->lens()->setAspectRatio(m_cameraAspectRatio);
+}
 
-
+void Barbel::Scene::initTestData()
+{
     QVector3D startPostion(0.0f, 0.0f, 0.0f);
     QVector3D secondPosition(10.0f, 10.0f, 10.0f);
     QVector3D thirdPosition(-10.0f, 0.0f, 10.0f);
@@ -131,13 +224,13 @@ void Barbel::Scene::initScene()
 
     QParallelAnimationGroup *parallelAnimationGroup1 = new QParallelAnimationGroup(this);
 
-    QPropertyAnimation *animation = new QPropertyAnimation(player, "translation", this);
+    QPropertyAnimation *animation = new QPropertyAnimation(m_player, "translation", this);
     animation->setDuration(5000);
     animation->setStartValue(startPostion);
     animation->setEndValue(secondPosition);
     parallelAnimationGroup1->addAnimation(animation);
 
-    QPropertyAnimation *rotationAnimation = new QPropertyAnimation(player, "rotation", this);
+    QPropertyAnimation *rotationAnimation = new QPropertyAnimation(m_player, "rotation", this);
     rotationAnimation->setDuration(5000);
     rotationAnimation->setStartValue(startAngles);
     rotationAnimation->setEndValue(secondAngles);
@@ -147,13 +240,13 @@ void Barbel::Scene::initScene()
 
     QParallelAnimationGroup *parallelAnimationGroup2 = new QParallelAnimationGroup(this);
 
-    animation = new QPropertyAnimation(player, "translation", this);
+    animation = new QPropertyAnimation(m_player, "translation", this);
     animation->setDuration(5000);
     animation->setStartValue(secondPosition);
     animation->setEndValue(thirdPosition);
     parallelAnimationGroup2->addAnimation(animation);
 
-    rotationAnimation = new QPropertyAnimation(player, "rotation", this);
+    rotationAnimation = new QPropertyAnimation(m_player, "rotation", this);
     rotationAnimation->setDuration(5000);
     rotationAnimation->setStartValue(secondAngles);
     rotationAnimation->setEndValue(thirdAngles);
@@ -162,13 +255,13 @@ void Barbel::Scene::initScene()
     animationGroup->addAnimation(parallelAnimationGroup2);
     QParallelAnimationGroup *parallelAnimationGroup3 = new QParallelAnimationGroup(this);
 
-    animation = new QPropertyAnimation(player, "translation", this);
+    animation = new QPropertyAnimation(m_player, "translation", this);
     animation->setDuration(5000);
     animation->setStartValue(thirdPosition);
     animation->setEndValue(startPostion);
     parallelAnimationGroup3->addAnimation(animation);
 
-    rotationAnimation = new QPropertyAnimation(player, "rotation", this);
+    rotationAnimation = new QPropertyAnimation(m_player, "rotation", this);
     rotationAnimation->setDuration(5000);
     rotationAnimation->setStartValue(thirdAngles);
     rotationAnimation->setEndValue(finalAngles);
@@ -200,5 +293,7 @@ void Barbel::Scene::initScene()
             }
         }
     }
+
+    this->startSinglePlayerSession();
 }
 

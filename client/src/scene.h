@@ -25,6 +25,7 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QSize>
+#include <QtNetwork/QHostAddress>
 
 namespace Qt3D {
     class QEntity;
@@ -35,37 +36,69 @@ namespace Qt3D {
 
 namespace Barbel {
 
+class ServerManager;
+class ClientManager;
+class Player;
+
 class Scene : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QSize viewportSize READ viewportSize WRITE setViewportSize NOTIFY viewportSizeChanged)
     Q_PROPERTY(Qt3D::QCamera* activeCamera READ activeCamera WRITE setActiveCamera NOTIFY activeCameraChanged)
+    Q_PROPERTY(ConnectionState connectionState READ connectionState NOTIFY connectionStateChanged)
+    Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
 public:
+    enum ConnectionState
+    {
+        InitializedState,
+        ConnectingState,
+        ConnectedState,
+        DisconnectedState,
+        ErrorState
+    };
+    Q_ENUM(ConnectionState)
+
     explicit Scene(QObject *parent = 0);
     ~Scene();
 
     Qt3D::QEntity *rootEnity();
     QSize viewportSize() const;
     Qt3D::QCamera *activeCamera() const;
+    ConnectionState connectionState() const;
+    QString errorString() const;
 
 public slots:
     void setViewportSize(QSize viewportSize);
     void setActiveCamera(Qt3D::QCamera *activeCamera);
 
+    void startSinglePlayerSession();
+    void hostMultiPlayerSession(quint16 port = 0);
+    void joinMultiPlayerSession(const QString &address, quint16 port);
+
 signals:
     void viewportSizeChanged(QSize viewportSize);
     void activeCameraChanged(Qt3D::QCamera *activeCamera);
+    void connectionStateChanged(ConnectionState connectionState);
+    void errorStringChanged(QString errorString);
 
 private:
     void initScene();
+    void initTestData();
 
     Qt3D::QEntity *m_rootEntity;
     Qt3D::QFrameGraph *m_frameGraph;
     Qt3D::QForwardRenderer *m_forwardRenderer;
     Qt3D::QCamera *m_activeCamera;
+    Barbel::Player *m_player;
 
     float m_cameraAspectRatio;
     QSize m_viewportSize;
+
+    //Networking objects
+    ServerManager *m_serverManager;
+    ClientManager *m_clientManager;
+    ConnectionState m_connectionState;
+    QString m_errorString;
 };
 
 }

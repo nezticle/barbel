@@ -22,7 +22,10 @@
 
 import QtQuick 2.5
 import QtQuick.Window 2.2
+import QtQuick.Controls 1.3
+import QtGraphicalEffects 1.0
 import com.bsquask.Barbel 1.0
+import Qt.labs.settings 1.0
 
 Window {
     id: window
@@ -30,7 +33,14 @@ Window {
     width: 1280
     height: 720
     title: "Barbel"
-    color: "blue"
+    color: "black"
+
+    Settings {
+        property alias x: window.x
+        property alias y: window.y
+        property alias width: window.width
+        property alias height: window.height
+    }
 
     BarbelSceneViewItem {
         id: viewport
@@ -41,5 +51,12 @@ Window {
     BarbelScene {
         id: barbelScene
         viewportSize: Qt.size(viewport.width, viewport.height)
+    }
+
+    StackView {
+        id: stackView
+        anchors.fill: parent
+
+        initialItem: Qt.resolvedUrl("StartPage.qml")
     }
 }

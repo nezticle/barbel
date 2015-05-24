@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>StartPage.qml</file>
+        <file>GamePage.qml</file>
+        <file>MultiplayerPage.qml</file>
+        <file>SingleplayerPage.qml</file>
+        <file>JoinMultiplayerPage.qml</file>
+        <file>HostMultiplayerPage.qml</file>
+        <file>SettingsPage.qml</file>
+    </qresource>
+</RCC>

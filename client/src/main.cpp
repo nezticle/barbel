@@ -32,6 +32,10 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
+    app.setOrganizationName("Bsquask");
+    app.setOrganizationDomain("bsquask.com");
+    app.setApplicationName("Barbel");
+
     qmlRegisterType<Barbel::Scene>("com.bsquask.Barbel", 1, 0, "BarbelScene");
     qmlRegisterType<Barbel::SceneViewItem>("com.bsquask.Barbel", 1, 0, "BarbelSceneViewItem");
 
