@@ -9,15 +9,15 @@ FocusScope {
     state: "CONNECTING"
 
     Connections {
-        target: barbelScene
+        target: barbelScene.clientManager
         onConnectionStateChanged: {
-            if (connectionState == BarbelScene.ConnectingState) {
+            if (connectionState == BarbelClientManager.ConnectingState) {
                 gamePage.state = "CONNECTING"
-            } else if (connectionState == BarbelScene.ConnectedState) {
+            } else if (connectionState == BarbelClientManager.ConnectedState) {
                 gamePage.state = "LOADING"
-            } else if (connectionState == BarbelScene.DisconnectedState) {
+            } else if (connectionState == BarbelClientManager.DisconnectedState) {
                 gamePage.state = "DISCONNECTING"
-            } else if (connectionState == BarbelScene.ErrorState) {
+            } else if (connectionState == BarbelClientManager.ErrorState) {
                 gamePage.state = "ERROR"
             }
         }

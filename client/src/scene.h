@@ -45,18 +45,8 @@ class Scene : public QObject
     Q_OBJECT
     Q_PROPERTY(QSize viewportSize READ viewportSize WRITE setViewportSize NOTIFY viewportSizeChanged)
     Q_PROPERTY(Qt3D::QCamera* activeCamera READ activeCamera WRITE setActiveCamera NOTIFY activeCameraChanged)
-    Q_PROPERTY(ConnectionState connectionState READ connectionState NOTIFY connectionStateChanged)
-    Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
+    Q_PROPERTY(Barbel::ClientManager* clientManager READ clientManager CONSTANT)
 public:
-    enum ConnectionState
-    {
-        InitializedState,
-        ConnectingState,
-        ConnectedState,
-        DisconnectedState,
-        ErrorState
-    };
-    Q_ENUM(ConnectionState)
 
     explicit Scene(QObject *parent = 0);
     ~Scene();
@@ -64,8 +54,7 @@ public:
     Qt3D::QEntity *rootEnity();
     QSize viewportSize() const;
     Qt3D::QCamera *activeCamera() const;
-    ConnectionState connectionState() const;
-    QString errorString() const;
+    ClientManager *clientManager() const;
 
 public slots:
     void setViewportSize(QSize viewportSize);
@@ -78,8 +67,6 @@ public slots:
 signals:
     void viewportSizeChanged(QSize viewportSize);
     void activeCameraChanged(Qt3D::QCamera *activeCamera);
-    void connectionStateChanged(ConnectionState connectionState);
-    void errorStringChanged(QString errorString);
 
 private:
     void initScene();
@@ -97,8 +84,7 @@ private:
     //Networking objects
     ServerManager *m_serverManager;
     ClientManager *m_clientManager;
-    ConnectionState m_connectionState;
-    QString m_errorString;
+
 };
 
 }

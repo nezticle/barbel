@@ -13,10 +13,14 @@ INCLUDEPATH += src include/Barbel
 HEADERS += \
     src/clientconnection.h \
     src/scene.h \
-    include/Barbel/servermanager.h
+    include/Barbel/servermanager.h \
+    src/object.h \
+    src/player.h
 
 SOURCES += \
     src/clientconnection.cpp \
     src/scene.cpp \
-    src/servermanager.cpp
+    src/servermanager.cpp \
+    src/object.cpp \
+    src/player.cpp
 

@@ -28,6 +28,8 @@
 #include "scene.h"
 #include "sceneviewitem.h"
 
+#include "Barbel/clientmanager.h"
+
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
@@ -38,6 +40,7 @@ int main(int argc, char *argv[])
 
     qmlRegisterType<Barbel::Scene>("com.bsquask.Barbel", 1, 0, "BarbelScene");
     qmlRegisterType<Barbel::SceneViewItem>("com.bsquask.Barbel", 1, 0, "BarbelSceneViewItem");
+    qmlRegisterUncreatableType<Barbel::ClientManager>("com.bsquask.Barbel", 1, 0, "BarbelClientManager", "Get from BarbelScene");
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));

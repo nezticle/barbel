@@ -55,8 +55,7 @@ Barbel::Scene::Scene(QObject *parent)
     , m_player(Q_NULLPTR)
     , m_cameraAspectRatio(3.0 / 4.0)
     , m_serverManager(Q_NULLPTR)
-    , m_clientManager(Q_NULLPTR)
-    , m_connectionState(Scene::InitializedState)
+    , m_clientManager(new Barbel::ClientManager(this))
 
 {
     initScene();
@@ -83,14 +82,9 @@ Qt3D::QCamera* Barbel::Scene::activeCamera() const
     return m_activeCamera;
 }
 
-Barbel::Scene::ConnectionState Barbel::Scene::connectionState() const
+Barbel::ClientManager *Barbel::Scene::clientManager() const
 {
-    return m_connectionState;
-}
-
-QString Barbel::Scene::errorString() const
-{
-    return m_errorString;
+    return m_clientManager;
 }
 
 void Barbel::Scene::setViewportSize(QSize viewportSize)
@@ -124,21 +118,14 @@ void Barbel::Scene::startSinglePlayerSession()
     //Start both the client and server locally only
     if (m_serverManager != Q_NULLPTR)
         delete m_serverManager;
-    if (m_clientManager != Q_NULLPTR)
-        delete m_clientManager;
 
     m_serverManager = new Barbel::ServerManager(this);
     if (m_serverManager->listen(QHostAddress::LocalHost)) {
         quint16 localPort = m_serverManager->serverPort();
-        m_clientManager = new Barbel::ClientManager(this);
         m_clientManager->connectToHost(QHostAddress::LocalHost, localPort);
-        m_connectionState = Scene::ConnectingState;
-        emit connectionStateChanged(m_connectionState);
     } else {
         //Could not create a server
         qDebug() << "Something is busted, couldn't start a local-player session";
-        m_connectionState = Scene::ErrorState;
-        emit connectionStateChanged(m_connectionState);
     }
 }
 
@@ -147,21 +134,14 @@ void Barbel::Scene::hostMultiPlayerSession(quint16 port)
     //Start both the client and server (Open)
     if (m_serverManager != Q_NULLPTR)
         delete m_serverManager;
-    if (m_clientManager != Q_NULLPTR)
-        delete m_clientManager;
 
     m_serverManager = new Barbel::ServerManager(this);
     if (m_serverManager->listen(QHostAddress::Any, port)) {
         quint16 localPort = m_serverManager->serverPort();
-        m_clientManager = new Barbel::ClientManager(this);
         m_clientManager->connectToHost(QHostAddress::LocalHost, localPort);
-        m_connectionState = Scene::ConnectingState;
-        emit connectionStateChanged(m_connectionState);
     } else {
         //Could not create a server
         qDebug() << "Something is busted, couldn't start a local-player session";
-        m_connectionState = Scene::ErrorState;
-        emit connectionStateChanged(m_connectionState);
     }
 }
 
@@ -169,24 +149,11 @@ void Barbel::Scene::joinMultiPlayerSession(const QString &address, quint16 port)
 {
     if (m_serverManager != Q_NULLPTR)
         delete m_serverManager;
-    if (m_clientManager != Q_NULLPTR)
-        delete m_clientManager;
 
     QHostInfo hostInfo = QHostInfo::fromName(address);
 
-    if ( hostInfo.error() != QHostInfo::NoError) {
-        m_connectionState = Scene::ErrorState;
-        m_errorString = hostInfo.errorString();
-        emit errorStringChanged(m_errorString);
-        emit connectionStateChanged(m_connectionState);
-        return;
-    }
-
     //Start only the client manager
-    m_clientManager = new Barbel::ClientManager(this);
     m_clientManager->connectToHost(hostInfo.addresses().first(), port);
-    m_connectionState = Scene::ConnectingState;
-    emit connectionStateChanged(m_connectionState);
 }
 
 void Barbel::Scene::initScene()
